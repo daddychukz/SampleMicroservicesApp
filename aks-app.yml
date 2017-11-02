@@ -1,0 +1,89 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: messeging-api
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: messeging-api
+        tier: backend
+        track: stable
+    spec:
+      containers:
+      - name: messeging-api
+        image: nileshprajapati/messagingapi
+        ports:
+        - containerPort: 3000
+          name: messagingapi
+        - containerPort: 5671
+          name: amqp
+        env:
+        - name: serviceBusConnectionString
+          value: "{Your Service Bus connection string}"
+        - name: serviceBusEntityPath
+          value: "microservicesmessages"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messeging-api
+spec:
+  selector:
+    app: messeging-api
+    tier: backend
+  type: LoadBalancer
+  ports:
+  - port: 3000
+    name: messagingapi
+  - port: 5671
+    name: amqp
+  selector:
+    app: messeging-api
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: messeging-client
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: messeging-client
+        tier: frontend
+        track: stable
+    spec:
+      containers:
+      - name: messeging-client
+        image: nileshprajapati/messagingclient
+        ports:
+        - containerPort: 80
+          name: messegingclient
+        - containerPort: 5671
+          name: amqp
+        env:
+        - name: serviceBusConnectionString
+          value: "{Your Service Bus connection string}"
+        - name: topicName
+          value: "microservicesmessages"
+        - name: subscriptionName
+          value: "messageconsumer"
+        - name: messagingAPI
+          value: "messeging-api"       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messeging-client
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    name: messegingclient
+  - port: 5671
+    name: amqp
+  selector:
+    app: messeging-client
+  sessionAffinity: ClientIP

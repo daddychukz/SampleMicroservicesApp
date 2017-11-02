@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  messagingapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - serviceBusConnectionString={Your Service Bus connection string}
+      - serviceBusEntityPath=microservicesmessages
+    ports:
+      - "3000"

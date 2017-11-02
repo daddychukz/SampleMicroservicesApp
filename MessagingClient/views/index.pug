@@ -1,0 +1,19 @@
+﻿extends layout
+
+block content
+  h1=title
+  #content
+    #leftcontent
+     textarea(id='message' rows='4' cols='50')
+     </br>
+     </br>
+     input(id='postMessage' type='button' value='Send Message')
+    #rightcontent
+     h1 Message Response from API
+     ul(id='messages')
+  script.
+     socketClient = io.connect("/");
+  script(src='/javascripts/script.js') 
+  
+
+     

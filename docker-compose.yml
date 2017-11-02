@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  messagingapi:
+    image: messagingapi
+    build:
+      context: ./MessagingAPI
+      dockerfile: Dockerfile

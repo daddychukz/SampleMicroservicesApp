@@ -11,15 +11,13 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var azure = require('azure');
 var serviceBusService = azure.createServiceBusService(process.env.serviceBusConnectionString);
-
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -67,18 +65,36 @@ var server = app.listen(app.get('port'), function () {
 });
 
 var io = require('socket.io')(server);
-io.on('connection', function (socket) {
-    var receiveMessage = function () {
-        try {
-            serviceBusService.receiveSubscriptionMessage(process.env.topicName, process.env.subscriptionName, function (error, receivedMessage) {
-                if (!error) {
-                    socket.emit('receiveMessage', { message: receivedMessage.body });
-                }
-            });
-        } catch (e) {
-
+var allConnections = [];
+var timerInstance;
+io.sockets.on('connection', function (socket) {
+    allConnections.push(socket);
+    if(!timerInstance) {
+        var receiveMessage = function () {
+            try {
+                serviceBusService.receiveSubscriptionMessage(process.env.topicName, process.env.subscriptionName, function (error, receivedMessage) {
+                    if (!error) {
+                        for(var connection in allConnections){
+                            allConnections[connection].emit('receiveMessage', { message: receivedMessage.body });
+                        }
+                        
+                    }
+                });
+            } catch (e) {
+            }
+            timerInstance = setTimeout(receiveMessage, 1000);
+        };
+        receiveMessage();
+    }
+    socket.on('disconnect', function() {
+        var socketIndex = allConnections.indexOf(socket);
+        if(allConnections.length > socketIndex){
+            allConnections.splice(socketIndex, 1);
         }
-        setTimeout(receiveMessage, 1000);
-    };
-    receiveMessage();
+     });
 });
+
+
+
+
+

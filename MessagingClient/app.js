@@ -82,7 +82,7 @@ io.sockets.on('connection', function (socket) {
                 });
             } catch (e) {
             }
-            timerInstance = setTimeout(receiveMessage, 1000);
+            timerInstance = setTimeout(receiveMessage, 2000);
         };
         receiveMessage();
     }
